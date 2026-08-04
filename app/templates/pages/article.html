@@ -8,7 +8,7 @@
     <div class="article-meta">
       <span>👤 {{ options.site_author }}</span>
       <span>📅 {{ article.published_at.strftime('%Y-%m-%d') if article.published_at }}</span>
-      <span>👁 {{ article.views }} 阅读</span>
+      <span>👁 {{ article.views }} {{ t('views') }}</span>
       {% if article.category_id and category_map.get(article.category_id) %}
       <span>📁 {{ category_map[article.category_id] }}</span>
       {% endif %}

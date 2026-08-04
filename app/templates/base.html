@@ -10,6 +10,10 @@
   <link rel="alternate" type="application/atom+xml" title="Atom" href="/feed.atom">
   <link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css">
   <link rel="stylesheet" href="/static/css/style.css">
+  {% if options.ga_code %}
+  <!-- Google Analytics -->
+  {{ options.ga_code | safe }}
+  {% endif %}
   {% block head %}{% endblock %}
 </head>
 <body>

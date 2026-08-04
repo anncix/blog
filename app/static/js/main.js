@@ -46,7 +46,7 @@
     });
   }
 
-  // ---------- 评论：回复按钮 ----------
+  // ---------- 评论：回复 / 取消回复按钮（事件委托，兼容 Pjax）----------
   document.addEventListener('click', function (e) {
     const btn = e.target.closest('.reply-btn');
     if (btn) {
@@ -61,16 +61,15 @@
         if (author) ta.placeholder = '回复 @' + author + '：';
       }
     }
-  });
-  const cancelReply = document.getElementById('cancelReply');
-  if (cancelReply) {
-    cancelReply.addEventListener('click', function () {
-      document.getElementById('parentId').value = '';
-      this.classList.add('d-none');
+    const cancelBtn = e.target.closest('#cancelReply');
+    if (cancelBtn) {
+      const parentId = document.getElementById('parentId');
+      if (parentId) parentId.value = '';
+      cancelBtn.classList.add('d-none');
       const ta = document.querySelector('#commentForm textarea');
       if (ta) ta.placeholder = '写下你的评论…';
-    });
-  }
+    }
+  });
 
   // ---------- 图片懒加载 ----------
   function initLazy() {

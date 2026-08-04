@@ -239,6 +239,7 @@ def submit_comment(
     # 触发评论通知（Bark / 邮件）
     from app.utils.hooks import hooks
 
+    base_url = (get_options_dict(db).get("site_url") or settings.SITE_URL).rstrip("/")
     hooks.trigger(
         "comment_created",
         {
@@ -246,6 +247,7 @@ def submit_comment(
             "comment": comment,
             "article": article,
             "is_admin": bool(request.session.get("user_id")),
+            "base_url": base_url,
         },
     )
     return RedirectResponse(redirect, status_code=302)

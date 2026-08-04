@@ -97,6 +97,9 @@ def api_comment(data: CommentIn, request: Request, db: Session = Depends(get_db)
     # 触发评论通知（Bark / 邮件）
     from app.utils.hooks import hooks
 
+    from app.core.deps import get_options_dict
+
+    base_url = (get_options_dict(db).get("site_url") or settings.SITE_URL).rstrip("/")
     hooks.trigger(
         "comment_created",
         {
@@ -104,6 +107,7 @@ def api_comment(data: CommentIn, request: Request, db: Session = Depends(get_db)
             "comment": comment,
             "article": article,
             "is_admin": False,
+            "base_url": base_url,
         },
     )
     return {"ok": True, "id": comment.id}
