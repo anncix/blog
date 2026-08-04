@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# 数据库 / 环境
+*.db
+*.sqlite3
+.env
+
+# 测试 / 构建
+.pytest_cache/
+.coverage
+dist/
+build/
+
+# 编辑器
+.idea/
+.vscode/
+.DS_Store

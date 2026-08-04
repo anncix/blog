@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "components/card.html" import article_card %}
+{% block title %}{{ tag.name }} - {{ options.site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1 class="page-title">标签：#{{ tag.name }}</h1>
+</div>
+<div class="row g-4">
+  {% for a in articles %}
+  <div class="col-md-6">{{ article_card(a, options, category_map) }}</div>
+  {% else %}
+  <div class="col-12"><div class="card glass-card text-center py-5"><p class="text-muted mb-0">该标签下暂无文章</p></div></div>
+  {% endfor %}
+</div>
+{% endblock %}

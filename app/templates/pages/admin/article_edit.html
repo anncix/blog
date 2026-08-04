@@ -1,0 +1,72 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}{{ '编辑文章' if article else '写文章' }}{% endblock %}
+{% block admin_title %}{{ '编辑文章' if article else '写文章' }}{% endblock %}
+{% block content %}
+<form action="/admin/articles/save" method="post" id="articleForm">
+  <input type="hidden" name="id" value="{{ article.id if article else '' }}">
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label">标题 *</label>
+          <input type="text" name="title" class="form-control" value="{{ article.title if article else '' }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">别名 (slug)</label>
+          <input type="text" name="slug" class="form-control" value="{{ article.slug if article else '' }}" placeholder="留空自动生成">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">分类</label>
+          <select name="category_id" class="form-select">
+            <option value="">未分类</option>
+            {% for c in categories %}
+            <option value="{{ c.id }}" {{ 'selected' if article and article.category_id == c.id }}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">标签（逗号分隔）</label>
+          <input type="text" name="tags" class="form-control" value="{{ article.tags|join(', ') if article else '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">状态</label>
+          <select name="status" class="form-select">
+            <option value="published" {{ 'selected' if not article or article.status == 'published' }}>发布</option>
+            <option value="draft" {{ 'selected' if article and article.status == 'draft' }}>草稿</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label">摘要（可选，留空自动提取）</label>
+      <input type="text" name="summary" class="form-control" value="{{ article.summary if article else '' }}">
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>正文（Markdown）</span>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" id="editModeBtn">编辑</button>
+        <button type="button" class="btn btn-outline-secondary" id="previewModeBtn">预览</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <textarea name="content" id="editor" class="form-control font-monospace" rows="18" placeholder="使用 Markdown 语法书写…">{{ article.content if article else '' }}</textarea>
+      <div id="preview" class="markdown-body d-none border rounded p-3"></div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <a href="/admin/articles" class="btn btn-outline-secondary">取消</a>
+    <button type="submit" class="btn btn-primary">保存</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/markdown-preview.js"></script>
+{% endblock %}

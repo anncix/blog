@@ -1,0 +1,84 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}友链管理{% endblock %}
+{% block admin_title %}友链管理{% endblock %}
+{% block content %}
+<div class="card mb-3">
+  <div class="card-header">添加友链</div>
+  <div class="card-body">
+    <form id="linkForm" class="row g-2">
+      <div class="col-md-3"><input type="text" id="linkName" class="form-control" placeholder="名称" required></div>
+      <div class="col-md-4"><input type="url" id="linkUrl" class="form-control" placeholder="https://example.com" required></div>
+      <div class="col-md-4"><input type="text" id="linkDesc" class="form-control" placeholder="描述（可选）"></div>
+      <div class="col-md-1"><button type="submit" class="btn btn-primary w-100">添加</button></div>
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">友链列表</div>
+  <div class="card-body">
+    <table class="table align-middle mb-3">
+      <thead><tr><th>名称</th><th>链接</th><th>描述</th><th></th></tr></thead>
+      <tbody id="linkTable">
+        {% for l in links %}
+        <tr data-name="{{ l.name }}" data-url="{{ l.url }}" data-desc="{{ l.desc }}">
+          <td>{{ l.name }}</td>
+          <td>{{ l.url }}</td>
+          <td>{{ l.desc }}</td>
+          <td class="text-end"><button class="btn btn-sm btn-outline-danger remove-link">删除</button></td>
+        </tr>
+        {% else %}
+        <tr class="empty-row"><td colspan="4" class="text-center text-muted py-3">暂无友链</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <form action="/admin/links" method="post" id="linksForm">
+      <input type="hidden" name="links_json" id="linksJson" value='{{ links | tojson | safe }}'>
+      <button type="submit" class="btn btn-primary">保存所有友链</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const linksDiv = document.getElementById('linkTable');
+  const linksJson = document.getElementById('linksJson');
+
+  function collect() {
+    const rows = [...linksDiv.querySelectorAll('tr[data-name]')];
+    return rows.map(r => ({
+      name: r.dataset.name,
+      url: r.dataset.url,
+      desc: r.dataset.desc || ''
+    }));
+  }
+
+  document.getElementById('linkForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('linkName').value.trim();
+    const url = document.getElementById('linkUrl').value.trim();
+    const desc = document.getElementById('linkDesc').value.trim();
+    if (!name || !url) return;
+    const empty = linksDiv.querySelector('.empty-row');
+    if (empty) empty.remove();
+    const tr = document.createElement('tr');
+    tr.dataset.name = name; tr.dataset.url = url; tr.dataset.desc = desc;
+    tr.innerHTML = `<td>${name}</td><td>${url}</td><td>${desc}</td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-danger remove-link">删除</button></td>`;
+    const removeBtn = tr.querySelector('.remove-link');
+    removeBtn.addEventListener('click', () => tr.remove());
+    linksDiv.appendChild(tr);
+    this.reset();
+  });
+
+  linksDiv.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-link')) {
+      e.target.closest('tr').remove();
+    }
+  });
+
+  document.getElementById('linksForm').addEventListener('submit', function() {
+    linksJson.value = JSON.stringify(collect());
+  });
+</script>
+{% endblock %}

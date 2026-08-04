@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}文章归档 - {{ options.site_name }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1 class="page-title">文章归档</h1>
+</div>
+<div class="card glass-card">
+  <div class="card-body">
+    {% for month, arts in groups.items() %}
+    <h4 class="archive-month">{{ month }}</h4>
+    <ul class="archive-list">
+      {% for a in arts %}
+      <li>
+        <span class="archive-date">{{ a.published_at.strftime('%m-%d') if a.published_at }}</span>
+        <a href="/article/{{ a.slug }}" class="archive-link">{{ a.title }}</a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-muted text-center py-4">暂无归档内容</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

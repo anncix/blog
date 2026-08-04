@@ -1,0 +1,39 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}评论审核{% endblock %}
+{% block admin_title %}评论审核{% endblock %}
+{% block content %}
+<div class="card">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>文章</th><th>评论者</th><th>内容</th><th>状态</th><th class="text-end">操作</th></tr></thead>
+    <tbody>
+      {% for c in comments %}
+      <tr>
+        <td class="text-truncate" style="max-width:160px">
+          {% if c.article_id and c.article_id in article_map %}{{ article_map[c.article_id] }}{% else %}<span class="text-muted">#{{ c.article_id }}</span>{% endif %}
+        </td>
+        <td>{{ c.author_name }}</td>
+        <td class="text-truncate" style="max-width:220px">{{ c.content }}</td>
+        <td>
+          <span class="badge {{ {'approved':'text-bg-success','rejected':'text-bg-danger','pending':'text-bg-warning'}.get(c.status,'text-bg-secondary') }}">{{ c.status }}</span>
+        </td>
+        <td class="text-end">
+          <form action="/admin/comments/{{ c.id }}/status" method="post" class="d-inline">
+            <input type="hidden" name="status" value="approved">
+            <button class="btn btn-sm btn-outline-success" type="submit">通过</button>
+          </form>
+          <form action="/admin/comments/{{ c.id }}/status" method="post" class="d-inline">
+            <input type="hidden" name="status" value="rejected">
+            <button class="btn btn-sm btn-outline-warning" type="submit">驳回</button>
+          </form>
+          <form action="/admin/comments/{{ c.id }}/delete" method="post" class="d-inline" onsubmit="return confirm('确定删除？')">
+            <button class="btn btn-sm btn-outline-danger" type="submit">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-center text-muted py-4">暂无评论</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

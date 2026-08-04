@@ -1,0 +1,57 @@
+{% macro render_comment_tree(comment, tree, depth=0) %}
+<div class="comment-item" style="--depth: {{ depth }}">
+  <div class="comment-avatar">{{ comment.author_name[0] }}</div>
+  <div class="comment-body">
+    <div class="comment-head">
+      <span class="comment-author">{{ comment.author_name }}</span>
+      <span class="comment-date">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+    <p class="comment-content">{{ comment.content }}</p>
+    <button class="reply-btn" data-comment-id="{{ comment.id }}" data-author="{{ comment.author_name }}">回复</button>
+    {% if tree.get(comment.id) %}
+    <div class="comment-children">
+      {% for child in tree[comment.id] %}
+      {{ render_comment_tree(child, tree, depth + 1) }}
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endmacro %}
+
+<div class="card glass-card comments-card">
+  <div class="card-header section-title">
+    评论 <span class="text-muted small">({{ comments|length }})</span>
+  </div>
+  <div class="card-body">
+    {% if not comment_enabled %}
+    <p class="text-muted">评论已关闭。</p>
+    {% else %}
+    <form id="commentForm" class="comment-form mb-4" action="/comment" method="post">
+      <input type="hidden" name="article_id" value="{{ article.id }}">
+      <input type="hidden" name="parent_id" id="parentId" value="">
+      <div class="row g-2">
+        <div class="col-md-6">
+          <input type="text" name="author_name" class="form-control" placeholder="昵称 *" required>
+        </div>
+        <div class="col-md-6">
+          <input type="email" name="author_email" class="form-control" placeholder="邮箱（可选）">
+        </div>
+      </div>
+      <textarea name="content" class="form-control mt-2" rows="3" placeholder="写下你的评论…" required></textarea>
+      <div class="d-flex justify-content-between align-items-center mt-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="cancelReply">取消回复</button>
+        <button type="submit" class="btn btn-primary btn-sm">提交评论</button>
+      </div>
+    </form>
+
+    <div id="commentList">
+      {% for comment in comment_tree.get(None, []) %}
+      {{ render_comment_tree(comment, comment_tree) }}
+      {% else %}
+      <p class="text-muted text-center">还没有评论，来抢沙发吧～</p>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>

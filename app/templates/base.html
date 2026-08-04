@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-bs-theme="light" data-theme="light" data-theme-mode="{{ options.dark_mode }}" data-accent="{{ options.theme_color }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ options.site_name }}{% endblock %}</title>
+  <meta name="description" content="{{ options.site_desc }}">
+  <meta name="keywords" content="{{ options.site_keywords }}">
+  <link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css">
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="blog-bg" aria-hidden="true"></div>
+
+  <!-- 固定毛玻璃顶栏 -->
+  {% include "components/header.html" %}
+
+  <div class="container blog-container" id="content">
+    <div class="row g-4">
+      <!-- 主内容区 -->
+      <main class="col-lg-8 col-md-12">
+        {% block content %}{% endblock %}
+      </main>
+      <!-- 侧边栏 -->
+      <aside class="col-lg-4 col-md-12">
+        {% include "components/sidebar.html" %}
+      </aside>
+    </div>
+  </div>
+
+  {% include "components/footer.html" %}
+
+  <!-- 返回顶部 -->
+  <button class="back-top" id="backTop" aria-label="返回顶部">↑</button>
+
+  <script src="/static/vendor/bootstrap/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/pjax.js"></script>
+  <script src="/static/js/main.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}站点设置{% endblock %}
+{% block admin_title %}站点设置{% endblock %}
+{% block content %}
+<form action="/admin/settings" method="post">
+  <div class="card mb-3">
+    <div class="card-header">基本信息</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">站点名称</label>
+          <input type="text" name="site_name" class="form-control" value="{{ options.site_name }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">站点作者</label>
+          <input type="text" name="site_author" class="form-control" value="{{ options.site_author }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">站点描述</label>
+          <input type="text" name="site_desc" class="form-control" value="{{ options.site_desc }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">关键词</label>
+          <input type="text" name="site_keywords" class="form-control" value="{{ options.site_keywords }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">头像 URL</label>
+          <input type="text" name="site_avatar" class="form-control" value="{{ options.site_avatar }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">个人简介</label>
+          <input type="text" name="site_bio" class="form-control" value="{{ options.site_bio }}">
+        </div>
+        <div class="col-md-12">
+          <label class="form-label">页脚文字</label>
+          <input type="text" name="footer_text" class="form-control" value="{{ options.footer_text }}">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header">主题与外观</div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label">主题色</label>
+          <select name="theme_color" class="form-select">
+            {% for c in ['indigo','blue','green','orange','purple','rose','cyan'] %}
+            <option value="{{ c }}" {{ 'selected' if options.theme_color == c }}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">默认模式</label>
+          <select name="dark_mode" class="form-select">
+            <option value="light" {{ 'selected' if options.dark_mode == 'light' }}>浅色</option>
+            <option value="dark" {{ 'selected' if options.dark_mode == 'dark' }}>深色</option>
+            <option value="system" {{ 'selected' if options.dark_mode == 'system' }}>跟随系统</option>
+          </select>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">评论开关</label>
+          <select name="comment_enabled" class="form-select">
+            <option value="1" {{ 'selected' if options.comment_enabled == '1' }}>开启</option>
+            <option value="0" {{ 'selected' if options.comment_enabled == '0' }}>关闭</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <button type="submit" class="btn btn-primary">保存设置</button>
+  </div>
+</form>
+
+<div class="card mb-3">
+  <div class="card-header">分类管理</div>
+  <div class="card-body">
+    <form action="/admin/categories/add" method="post" class="row g-2 mb-3">
+      <div class="col-md-3"><input type="text" name="name" class="form-control" placeholder="分类名" required></div>
+      <div class="col-md-3"><input type="text" name="slug" class="form-control" placeholder="别名"></div>
+      <div class="col-md-4"><input type="text" name="description" class="form-control" placeholder="描述"></div>
+      <div class="col-md-2"><button class="btn btn-primary w-100" type="submit">添加</button></div>
+    </form>
+    <table class="table table-sm mb-0">
+      <thead><tr><th>名称</th><th>别名</th><th>文章数</th><th></th></tr></thead>
+      <tbody>
+        {% for c in categories %}
+        <tr>
+          <td>{{ c.name }}</td>
+          <td>{{ c.slug }}</td>
+          <td>{{ category_counts.get(c.id, 0) }}</td>
+          <td class="text-end">
+            <form action="/admin/categories/{{ c.id }}/delete" method="post" class="d-inline" onsubmit="return confirm('删除分类？')">
+              <button class="btn btn-sm btn-outline-danger">删除</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4" class="text-muted text-center py-3">暂无分类</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

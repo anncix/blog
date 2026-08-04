@@ -1,0 +1,40 @@
+<header class="navbar header-glass sticky-top">
+  <div class="container d-flex align-items-center justify-content-between">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      {% if options.site_avatar %}
+      <img src="{{ options.site_avatar }}" alt="logo" class="brand-avatar" loading="lazy">
+      {% else %}
+      <span class="brand-icon">A</span>
+      {% endif %}
+      <span class="brand-name">{{ options.site_name }}</span>
+    </a>
+
+    <nav class="d-none d-md-flex align-items-center gap-1" id="mainNav">
+      <a href="/" class="nav-link">首页</a>
+      <a href="/archive" class="nav-link">归档</a>
+      <a href="/timeline" class="nav-link">时间轴</a>
+      <a href="/links" class="nav-link">友链</a>
+      <a href="/search" class="nav-link">搜索</a>
+      <a href="/admin" class="nav-link">管理</a>
+    </nav>
+
+    <div class="d-flex align-items-center gap-2">
+      <button class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换主题">
+        <span class="theme-icon-light">☀️</span>
+        <span class="theme-icon-dark">🌙</span>
+      </button>
+      <button class="navbar-toggler d-md-none" id="navToggle" aria-label="菜单">
+        <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
+      </button>
+    </div>
+  </div>
+  <!-- 移动端菜单 -->
+  <div class="mobile-menu d-md-none" id="mobileMenu">
+    <a href="/">首页</a>
+    <a href="/archive">归档</a>
+    <a href="/timeline">时间轴</a>
+    <a href="/links">友链</a>
+    <a href="/search">搜索</a>
+    <a href="/admin">管理</a>
+  </div>
+</header>

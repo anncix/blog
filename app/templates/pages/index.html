@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% from "components/card.html" import article_card %}
+{% block title %}{{ options.site_name }} - {{ options.site_desc }}{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1 class="page-title">最新文章</h1>
+</div>
+
+<div class="row g-4">
+  {% for a in articles %}
+  <div class="col-md-6">
+    {{ article_card(a, options, category_map) }}
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card glass-card text-center py-5">
+      <p class="text-muted mb-0">暂时还没有文章，去后台发布第一篇吧～</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if total_pages > 1 %}
+<nav class="pagination-wrap" aria-label="分页">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {{ 'disabled' if page <= 1 }}">
+      <a class="page-link" href="/?page={{ page - 1 }}" {% if page <= 1 %}tabindex="-1"{% endif %}>上一页</a>
+    </li>
+    {% for p in range(1, total_pages + 1) %}
+    <li class="page-item {{ 'active' if p == page }}">
+      <a class="page-link" href="/?page={{ p }}">{{ p }}</a>
+    </li>
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if page >= total_pages }}">
+      <a class="page-link" href="/?page={{ page + 1 }}" {% if page >= total_pages %}tabindex="-1"{% endif %}>下一页</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}

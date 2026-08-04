@@ -1,0 +1,32 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}文章管理{% endblock %}
+{% block admin_title %}文章管理{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-end mb-3">
+  <a href="/admin/articles/new" class="btn btn-primary">写文章</a>
+</div>
+<div class="card">
+  <table class="table table-hover align-middle mb-0">
+    <thead><tr><th>标题</th><th>分类</th><th>状态</th><th>阅读</th><th>更新时间</th><th class="text-end">操作</th></tr></thead>
+    <tbody>
+      {% for a in articles %}
+      <tr>
+        <td><a href="/admin/articles/{{ a.id }}/edit">{{ a.title }}</a></td>
+        <td>{{ category_map.get(a.category_id, '-') }}</td>
+        <td><span class="badge {{ 'text-bg-success' if a.status == 'published' else 'text-bg-secondary' }}">{{ a.status }}</span></td>
+        <td>{{ a.views }}</td>
+        <td>{{ a.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td class="text-end">
+          <a href="/admin/articles/{{ a.id }}/edit" class="btn btn-sm btn-outline-primary">编辑</a>
+          <form action="/admin/articles/{{ a.id }}/delete" method="post" class="d-inline" onsubmit="return confirm('确定删除该文章？')">
+            <button type="submit" class="btn btn-sm btn-outline-danger">删除</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" class="text-center text-muted py-4">暂无文章</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
