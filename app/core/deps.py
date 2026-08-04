@@ -1,5 +1,6 @@
 """依赖注入：会话、当前用户、站点配置、模板上下文。"""
 import json
+import time
 
 from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
@@ -42,6 +43,15 @@ PUBLIC_KEYS = [
 # ---------------------------------------------------------------------------
 # 站点配置读写
 # ---------------------------------------------------------------------------
+# 全量配置 TTL 缓存（秒），避免每个请求都查库；写入时失效
+_OPTIONS_TTL = 30
+_OPTIONS_CACHE: dict = {"t": 0.0, "data": None}
+
+
+def _invalidate_options_cache() -> None:
+    _OPTIONS_CACHE["data"] = None
+
+
 def get_option(db: Session, key: str, default: str = "") -> str:
     """读取单个配置项。"""
     row = db.query(Option).filter(Option.option_key == key).first()
@@ -58,11 +68,16 @@ def set_option(db: Session, key: str, value: str) -> Option:
         db.add(row)
     db.commit()
     db.refresh(row)
+    _invalidate_options_cache()
     return row
 
 
 def get_options_dict(db: Session, keys: list[str] | None = None) -> dict:
-    """读取配置为 dict。"""
+    """读取配置为 dict。全量读取时启用 TTL 缓存。"""
+    # 全量读取命中缓存则直接返回
+    if keys is None and _OPTIONS_CACHE["data"] is not None:
+        if time.time() - _OPTIONS_CACHE["t"] < _OPTIONS_TTL:
+            return _OPTIONS_CACHE["data"]
     keys = keys or PUBLIC_KEYS
     rows = db.query(Option).filter(Option.option_key.in_(keys)).all()
     data = {r.option_key: r.option_value for r in rows}
@@ -96,6 +111,9 @@ def get_options_dict(db: Session, keys: list[str] | None = None) -> dict:
         data["friend_links"] = json.loads(data.get("friend_links", "[]"))
     except (ValueError, TypeError):
         data["friend_links"] = []
+    if keys is None:
+        _OPTIONS_CACHE["t"] = time.time()
+        _OPTIONS_CACHE["data"] = data
     return data
 
 

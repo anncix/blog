@@ -6,6 +6,8 @@
 
 ## 版本
 
+**v0.0.4** — 安全加固与性能优化：登录限流、Markdown URL 白名单、侧边栏/配置 TTL 缓存、分类/标签分页、安全默认值。
+
 **v0.0.3** — 新增 RSS/Atom 订阅、独立页面、全文搜索、评论反垃圾、中英双语、GPLv3 开源协议。
 
 **v0.0.2** — 新增评论通知：Bark 推送 + 邮件通知 + 后台设置。
@@ -102,7 +104,7 @@ uvicorn app.main:app --reload --port 8000
 | `SECRET_KEY` | `dev-secret-change-me` | 会话 / JWT 密钥 |
 | `ADMIN_USERNAME` | `admin` | 默认管理员账号 |
 | `ADMIN_PASSWORD` | `admin123` | 默认管理员密码 |
-| `DEBUG` | `true` | 调试模式 |
+| `DEBUG` | `false` | 调试模式（生产环境保持关闭）|
 
 ## 后台说明
 
@@ -125,6 +127,18 @@ uvicorn app.main:app --reload --port 8000
 | GET | `/api/admin/ping` | 受保护接口（需 Bearer JWT）|
 
 ## 更新记录
+
+### v0.0.4（2026-08-04）
+- **安全加固**：登录接口（`/admin/login` + `/api/auth/login`）增加 IP 滑动窗口限流防暴力破解
+- **安全加固**：Markdown 链接/图片增加 URL 协议白名单，仅允许 `http/https/mailto/tel/ftp`，阻断 `javascript:` XSS
+- **安全加固**：`DEBUG` 默认为 `false`（生产默认安全），启动时输出安全提醒（默认密钥/密码）
+- **性能优化**：站点全量配置 (`get_options_dict`) 增加 TTL 缓存，避免每次查库
+- **性能优化**：侧边栏数据 (`_sidebar_data`) 增加 TTL 缓存；标签频次统计仅拉 `_tags` 字段，减少内存开销
+- **性能优化**：分类页 / 标签页增加分页（每页 `PAGE_SIZE` 篇），避免一次性加载全量文章
+- **性能优化**：标签页改用 SQL `LIKE` 过滤代替全量加载后 Python 过滤，大幅降低查询时间
+- **性能优化**：仪表盘总阅读量改用 `func.sum` 聚合，避免加载所有文章到内存
+- **前端修复**：标签链接做 `slug` 化 + URL 编码，修复含空格/特殊字符标签链接断裂问题
+- 缓存失效策略：配置写入时自动失效缓存，保证数据一致性
 
 ### v0.0.3（2026-08-04）
 - 新增 RSS 2.0（`/feed.xml`）与 Atom 1.0（`/feed.atom`）订阅，`app/utils/feed.py` 标准库生成 XML

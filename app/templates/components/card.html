@@ -13,7 +13,7 @@
       <span>👁 {{ a.views }} {{ t('views') }}</span>
       {% if a.tags %}
       <span>🏷
-        {% for tag in a.tags %}<a href="/tag/{{ tag }}" class="meta-tag">{{ tag }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+        {% for tag in a.tags %}<a href="/tag/{{ tag | lower | replace(' ', '-') | urlencode }}" class="meta-tag">{{ tag }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
       </span>
       {% endif %}
     </div>
@@ -21,7 +21,7 @@
     {% if a.tags %}
     <div class="article-tags">
       {% for tag in a.tags %}
-      <a href="/tag/{{ tag }}" class="chip chip-sm">{{ tag }}</a>
+      <a href="/tag/{{ tag | lower | replace(' ', '-') | urlencode }}" class="chip chip-sm">{{ tag }}</a>
       {% endfor %}
     </div>
     {% endif %}

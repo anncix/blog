@@ -1,9 +1,25 @@
 """Markdown 解析与渲染工具。"""
 import html
+import re
 
 import mistune
 
 from mistune import HTMLRenderer
+
+# 允许的 URL 协议白名单，其余协议（如 javascript: / data: / vbscript:）一律降级为 #
+_ALLOWED_SCHEMES = ("http", "https", "mailto", "tel", "ftp")
+
+
+def _safe_url(url: str) -> str:
+    """净化 URL：去除控制字符，非白名单协议返回 #，防止 XSS。"""
+    url = (url or "").strip()
+    url = re.sub(r"[\x00-\x20\x7f]", "", url)
+    if ":" in url.split("/", 1)[0]:
+        scheme = url.split(":", 1)[0].lower()
+        if scheme not in _ALLOWED_SCHEMES:
+            return "#"
+    return url
+
 
 # 自定义渲染器：为外链加 target=_blank，为图片加懒加载
 class BlogRenderer(HTMLRenderer):
@@ -11,12 +27,14 @@ class BlogRenderer(HTMLRenderer):
         return html.escape(s or "", quote=True)
 
     def image(self, text, url, title=None, **kwargs):
+        url = _safe_url(url)
         attrs = f'src="{self._esc(url)}" alt="{self._esc(text)}" loading="lazy"'
         if title:
             attrs += f' title="{self._esc(title)}"'
         return f'<img {attrs}/>'
 
     def link(self, text, url, title=None, **kwargs):
+        url = _safe_url(url)
         attrs = f'href="{self._esc(url)}"'
         if url.startswith("http"):
             attrs += ' target="_blank" rel="noopener noreferrer"'

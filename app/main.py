@@ -1,4 +1,5 @@
 """FastAPI 应用入口。"""
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -11,9 +12,24 @@ from app.models import User, create_all
 from app.models.base import SessionLocal, engine
 from app.routers import admin, api, front
 
+logger = logging.getLogger(__name__)
+
+
+def _warn_security() -> None:
+    """上线前安全提醒：默认密钥 / 默认管理员密码 / 调试模式。"""
+    if settings.SECRET_KEY == "dev-secret-change-me":
+        logger.warning(
+            "安全提醒：SECRET_KEY 仍为默认值，session 与 JWT 可被伪造。请通过环境变量设置强随机密钥。"
+        )
+    if settings.DEBUG:
+        logger.warning("安全提醒：DEBUG 处于开启状态，生产环境请设为 false。")
+    if settings.ADMIN_PASSWORD == "admin123":
+        logger.warning("安全提醒：默认管理员密码 admin123 存在风险，请尽快修改。")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    _warn_security()
     create_all()
     _bootstrap_admin()
     # 依序初始化：先建表，再建 FTS 索引，最后注册钩子

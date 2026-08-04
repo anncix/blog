@@ -68,12 +68,24 @@ def login(
     password: str = Form(...),
     db: Session = Depends(get_db),
 ):
+    from app.utils.anti_spam import _client_ip, login_limited, login_success
+
+    ip = _client_ip(request)
+    # 登录限流：同一 IP 连续失败过多则锁定
+    if login_limited(ip):
+        request.state.db = db
+        return _render_admin(
+            request,
+            "pages/admin/login.html",
+            {"error": "尝试过于频繁，请稍后再试"},
+        )
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.password_hash):
         request.state.db = db
         return _render_admin(
             request, "pages/admin/login.html", {"error": "用户名或密码错误"}
         )
+    login_success(ip)
     request.session["user_id"] = user.id
     return RedirectResponse("/admin", status_code=302)
 
@@ -99,7 +111,7 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "pending_comments": db.query(Comment).filter(Comment.status == "pending").count(),
         "categories": db.query(Category).count(),
         "tags": db.query(Tag).count(),
-        "views": sum(a.views for a in db.query(Article).all()),
+        "views": db.query(func.sum(Article.views)).scalar() or 0,
     }
     recent = (
         db.query(Article).order_by(Article.created_at.desc()).limit(5).all()

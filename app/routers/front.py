@@ -1,6 +1,7 @@
 """前台路由：首页、文章详情、分类/标签、归档、时间轴、友链、独立页面、搜索、评论、订阅。"""
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -87,39 +88,55 @@ def article_detail(slug: str, request: Request, db: Session = Depends(get_db)):
 # 分类 / 标签
 # ---------------------------------------------------------------------------
 @router.get("/category/{slug}")
-def category_view(slug: str, request: Request, db: Session = Depends(get_db)):
+def category_view(
+    slug: str, request: Request, page: int = 1, db: Session = Depends(get_db)
+):
     category = db.query(Category).filter(Category.slug == slug).first()
     if not category:
         return render(request, "pages/404.html", db, {}, status_code=404)
+    page = max(page, 1)
+    total = (
+        db.query(Article)
+        .filter(_published(), Article.category_id == category.id)
+        .count()
+    )
     articles = (
         db.query(Article)
         .filter(_published(), Article.category_id == category.id)
         .order_by(Article.published_at.desc())
+        .offset((page - 1) * settings.PAGE_SIZE)
+        .limit(settings.PAGE_SIZE)
         .all()
     )
+    total_pages = max(1, (total + settings.PAGE_SIZE - 1) // settings.PAGE_SIZE)
     return render(
         request,
         "pages/category.html",
         db,
-        {"category": category, "articles": articles},
+        {"category": category, "articles": articles, "page": page, "total_pages": total_pages},
     )
 
 
 @router.get("/tag/{slug}")
-def tag_view(slug: str, request: Request, db: Session = Depends(get_db)):
+def tag_view(
+    slug: str, request: Request, page: int = 1, db: Session = Depends(get_db)
+):
     tag = db.query(Tag).filter(Tag.slug == slug).first()
     if not tag:
         return render(request, "pages/404.html", db, {}, status_code=404)
-    articles = [
-        a
-        for a in db.query(Article)
-        .filter(_published())
+    # JSON LIKE 过滤：tags 字段是 JSON 数组，所以用 "%\"{tag.name}\"%" 匹配
+    articles = (
+        db.query(Article)
+        .filter(_published(), Article._tags.like(f'%\"{tag.name}\"%'))
         .order_by(Article.published_at.desc())
+        .offset((page - 1) * settings.PAGE_SIZE)
+        .limit(settings.PAGE_SIZE)
         .all()
-        if tag.name in a.tags
-    ]
+    )
+    total = db.query(Article).filter(_published(), Article._tags.like(f'%\"{tag.name}\"%')).count()
+    total_pages = max(1, (total + settings.PAGE_SIZE - 1) // settings.PAGE_SIZE)
     return render(
-        request, "pages/tag.html", db, {"tag": tag, "articles": articles}
+        request, "pages/tag.html", db, {"tag": tag, "articles": articles, "page": page, "total_pages": total_pages}
     )
 
 

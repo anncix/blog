@@ -17,14 +17,18 @@ router = APIRouter(prefix="/api")
 
 
 @router.post("/auth/login", response_model=dict)
-def api_login(data: LoginIn, db: Session = Depends(get_db)):
+def api_login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
     from app.models import User
 
     from app.core.security import verify_password
+    from app.utils.anti_spam import _client_ip, login_limited, login_success
 
+    if login_limited(_client_ip(request)):
+        raise HTTPException(status_code=429, detail="尝试过于频繁，请稍后再试")
     user = db.query(User).filter(User.username == data.username).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="用户名或密码错误")
+    login_success(_client_ip(request))
     token = create_access_token(user.id, {"username": user.username})
     return {"access_token": token, "token_type": "bearer", "user": UserOut.model_validate(user).model_dump()}
 
