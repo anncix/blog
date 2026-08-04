@@ -300,6 +300,16 @@ async def settings_save(
     dark_mode: str = Form("system"),
     comment_enabled: str = Form("1"),
     ga_code: str = Form(""),
+    bark_enabled: str = Form("0"),
+    bark_key: str = Form(""),
+    bark_server: str = Form("https://api.day.app"),
+    email_enabled: str = Form("0"),
+    smtp_host: str = Form(""),
+    smtp_port: str = Form("465"),
+    smtp_user: str = Form(""),
+    smtp_password: str = Form(""),
+    smtp_from: str = Form(""),
+    smtp_use_tls: str = Form("1"),
     db: Session = Depends(get_db),
 ):
     await _require_admin(request)
@@ -316,6 +326,17 @@ async def settings_save(
         "dark_mode": dark_mode,
         "comment_enabled": comment_enabled,
         "ga_code": ga_code,
+        # 通知配置
+        "bark_enabled": bark_enabled,
+        "bark_key": bark_key,
+        "bark_server": bark_server,
+        "email_enabled": email_enabled,
+        "smtp_host": smtp_host,
+        "smtp_port": smtp_port,
+        "smtp_user": smtp_user,
+        "smtp_password": smtp_password,
+        "smtp_from": smtp_from,
+        "smtp_use_tls": smtp_use_tls,
     }
     for k, v in data.items():
         set_option(db, k, v)

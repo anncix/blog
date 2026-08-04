@@ -216,5 +216,18 @@ def submit_comment(
     )
     db.add(comment)
     db.commit()
+    db.refresh(comment)
+    # 触发评论通知（Bark / 邮件）
+    from app.utils.hooks import hooks
+
+    hooks.trigger(
+        "comment_created",
+        {
+            "db": db,
+            "comment": comment,
+            "article": article,
+            "is_admin": bool(request.session.get("user_id")),
+        },
+    )
     redirect = request.headers.get("Referer", f"/article/{article.slug}")
     return RedirectResponse(redirect, status_code=302)

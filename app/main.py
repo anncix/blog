@@ -16,6 +16,9 @@ from app.routers import admin, api, front
 async def lifespan(app: FastAPI):
     create_all()
     _bootstrap_admin()
+    from app.utils.notify import setup_notify_hooks
+
+    setup_notify_hooks()
     yield
 
 

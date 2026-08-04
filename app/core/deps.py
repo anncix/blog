@@ -23,6 +23,17 @@ PUBLIC_KEYS = [
     "friend_links",
     "comment_enabled",
     "ga_code",
+    # 通知配置
+    "bark_enabled",
+    "bark_key",
+    "bark_server",
+    "email_enabled",
+    "smtp_host",
+    "smtp_port",
+    "smtp_user",
+    "smtp_password",
+    "smtp_from",
+    "smtp_use_tls",
 ]
 
 
@@ -62,6 +73,17 @@ def get_options_dict(db: Session, keys: list[str] | None = None) -> dict:
         "dark_mode": "system",
         "comment_enabled": "1",
         "friend_links": "[]",
+        # 通知
+        "bark_enabled": "0",
+        "bark_key": "",
+        "bark_server": "https://api.day.app",
+        "email_enabled": "0",
+        "smtp_host": "",
+        "smtp_port": "465",
+        "smtp_user": "",
+        "smtp_password": "",
+        "smtp_from": "",
+        "smtp_use_tls": "1",
     }
     for k, v in defaults.items():
         data.setdefault(k, v)

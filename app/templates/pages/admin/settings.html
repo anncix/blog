@@ -70,6 +70,70 @@
     </div>
   </div>
 
+  <div class="card mb-3">
+    <div class="card-header">通知设置</div>
+    <div class="card-body">
+      <div class="row g-3 mb-3">
+        <div class="col-md-3">
+          <label class="form-label">Bark 推送</label>
+          <select name="bark_enabled" class="form-select">
+            <option value="1" {{ 'selected' if options.bark_enabled == '1' }}>开启</option>
+            <option value="0" {{ 'selected' if options.bark_enabled == '0' }}>关闭</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">邮件通知</label>
+          <select name="email_enabled" class="form-select">
+            <option value="1" {{ 'selected' if options.email_enabled == '1' }}>开启</option>
+            <option value="0" {{ 'selected' if options.email_enabled == '0' }}>关闭</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <div class="text-muted small mt-2">
+            用户评论 → Bark 推送；管理员回复评论 → 邮件通知被回复的用户。
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">Bark Key</label>
+          <input type="text" name="bark_key" class="form-control" value="{{ options.bark_key }}" placeholder="如：xxxxxxxxxxxxxxxx">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Bark 服务器</label>
+          <input type="text" name="bark_server" class="form-control" value="{{ options.bark_server }}" placeholder="https://api.day.app">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">SMTP 服务器</label>
+          <input type="text" name="smtp_host" class="form-control" value="{{ options.smtp_host }}" placeholder="如：smtp.qq.com">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">SMTP 端口</label>
+          <input type="text" name="smtp_port" class="form-control" value="{{ options.smtp_port }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">加密方式</label>
+          <select name="smtp_use_tls" class="form-select">
+            <option value="1" {{ 'selected' if options.smtp_use_tls == '1' }}>SSL/TLS</option>
+            <option value="0" {{ 'selected' if options.smtp_use_tls == '0' }}>STARTTLS</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">SMTP 用户名</label>
+          <input type="text" name="smtp_user" class="form-control" value="{{ options.smtp_user }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">SMTP 密码 / 授权码</label>
+          <input type="password" name="smtp_password" class="form-control" value="{{ options.smtp_password }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">发件人地址</label>
+          <input type="text" name="smtp_from" class="form-control" value="{{ options.smtp_from }}" placeholder="留空则用 SMTP 用户名">
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="d-flex justify-content-end">
     <button type="submit" class="btn btn-primary">保存设置</button>
   </div>

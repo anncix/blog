@@ -12,7 +12,7 @@ class Settings:
     """应用配置，集中管理常量，可通过环境变量覆盖。"""
 
     APP_NAME: str = "Anncix Blog"
-    VERSION: str = "0.0.1"
+    VERSION: str = "0.0.2"
     DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("1", "true", "yes")
 
     # 数据库

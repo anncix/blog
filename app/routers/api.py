@@ -84,6 +84,19 @@ def api_comment(data: CommentIn, db: Session = Depends(get_db)):
     )
     db.add(comment)
     db.commit()
+    db.refresh(comment)
+    # 触发评论通知（Bark / 邮件）
+    from app.utils.hooks import hooks
+
+    hooks.trigger(
+        "comment_created",
+        {
+            "db": db,
+            "comment": comment,
+            "article": article,
+            "is_admin": False,
+        },
+    )
     return {"ok": True, "id": comment.id}
 
 
