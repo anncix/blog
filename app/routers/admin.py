@@ -8,9 +8,10 @@ from sqlalchemy.orm import Session
 
 from app.core.deps import get_options_dict, set_option
 from app.core.security import hash_password, verify_password
-from app.models import Article, Category, Comment, Tag, User
+from app.models import Article, Category, Comment, Page, Tag, User
 from app.models.base import get_db
-from app.routers.helpers import templates
+from app.routers.helpers import resolve_lang, templates
+from app.utils.i18n import t as _t
 from app.utils.markdown import extract_summary
 
 router = APIRouter(prefix="/admin")
@@ -24,10 +25,16 @@ def _render_admin(request: Request, template: str, context: dict | None = None):
     db = request.state.db
     cats = db.query(Category).all()
     category_map = {c.id: c.name for c in cats}
+    category_slug_map = {c.id: c.slug for c in cats}
+    options = get_options_dict(db)
+    lang = resolve_lang(request, options)
     ctx = {
         "request": request,
-        "options": get_options_dict(db),
+        "options": options,
+        "lang": lang,
+        "t": lambda key, **kw: _t(lang, key, **kw),
         "category_map": category_map,
+        "category_slug_map": category_slug_map,
     }
     if context:
         ctx.update(context)
@@ -115,14 +122,16 @@ async def article_list(request: Request, db: Session = Depends(get_db)):
     )
 
 
-def _unique_slug(db: Session, base: str, exclude_id: int | None = None) -> str:
+def _unique_slug(
+    db: Session, base: str, exclude_id: int | None = None, model=Article
+) -> str:
     """生成数据库中唯一的 slug，冲突时追加数字后缀。"""
     candidate = base
     n = 2
     while True:
-        q = db.query(Article).filter(Article.slug == candidate)
+        q = db.query(model).filter(model.slug == candidate)
         if exclude_id:
-            q = q.filter(Article.id != exclude_id)
+            q = q.filter(model.id != exclude_id)
         if q.first() is None:
             return candidate
         candidate = f"{base}-{n}"
@@ -216,6 +225,77 @@ async def article_delete(
 
 
 # ---------------------------------------------------------------------------
+# 独立页面管理
+# ---------------------------------------------------------------------------
+@router.get("/pages")
+async def page_list(request: Request, db: Session = Depends(get_db)):
+    await _require_admin(request)
+    request.state.db = db
+    pages = db.query(Page).order_by(Page.created_at.desc()).all()
+    return _render_admin(request, "pages/admin/pages.html", {"pages": pages})
+
+
+@router.get("/pages/new")
+async def page_new(request: Request, db: Session = Depends(get_db)):
+    await _require_admin(request)
+    request.state.db = db
+    return _render_admin(request, "pages/admin/page_edit.html", {"page": None})
+
+
+@router.get("/pages/{page_id}/edit")
+async def page_edit(page_id: int, request: Request, db: Session = Depends(get_db)):
+    await _require_admin(request)
+    request.state.db = db
+    page = db.get(Page, page_id)
+    if not page:
+        raise HTTPException(status_code=404)
+    return _render_admin(request, "pages/admin/page_edit.html", {"page": page})
+
+
+@router.post("/pages/save")
+async def page_save(
+    request: Request,
+    id: int | None = Form(None),
+    title: str = Form(...),
+    slug: str = Form(""),
+    content: str = Form(""),
+    status: str = Form("published"),
+    db: Session = Depends(get_db),
+):
+    await _require_admin(request)
+    request.state.db = db
+    if id:
+        page = db.get(Page, id)
+        if not page:
+            raise HTTPException(status_code=404)
+    else:
+        page = Page()
+    page.title = title.strip()
+    base_slug = slug.strip() or title.strip().lower().replace(" ", "-")
+    page.slug = _unique_slug(db, base_slug, exclude_id=id, model=Page)
+    page.content = content
+    page.status = status
+    if status == "published" and not page.published_at:
+        from datetime import datetime
+
+        page.published_at = datetime.utcnow()
+    db.add(page)
+    db.commit()
+    return RedirectResponse("/admin/pages", status_code=302)
+
+
+@router.post("/pages/{page_id}/delete")
+async def page_delete(page_id: int, request: Request, db: Session = Depends(get_db)):
+    await _require_admin(request)
+    request.state.db = db
+    page = db.get(Page, page_id)
+    if page:
+        db.delete(page)
+        db.commit()
+    return RedirectResponse("/admin/pages", status_code=302)
+
+
+# ---------------------------------------------------------------------------
 # 评论审核
 # ---------------------------------------------------------------------------
 @router.get("/comments")
@@ -300,6 +380,8 @@ async def settings_save(
     dark_mode: str = Form("system"),
     comment_enabled: str = Form("1"),
     ga_code: str = Form(""),
+    site_url: str = Form(""),
+    lang: str = Form("zh"),
     bark_enabled: str = Form("0"),
     bark_key: str = Form(""),
     bark_server: str = Form("https://api.day.app"),
@@ -326,6 +408,8 @@ async def settings_save(
         "dark_mode": dark_mode,
         "comment_enabled": comment_enabled,
         "ga_code": ga_code,
+        "site_url": site_url,
+        "lang": lang,
         # 通知配置
         "bark_enabled": bark_enabled,
         "bark_key": bark_key,

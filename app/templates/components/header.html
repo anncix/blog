@@ -10,31 +10,41 @@
     </a>
 
     <nav class="d-none d-md-flex align-items-center gap-1" id="mainNav">
-      <a href="/" class="nav-link">首页</a>
-      <a href="/archive" class="nav-link">归档</a>
-      <a href="/timeline" class="nav-link">时间轴</a>
-      <a href="/links" class="nav-link">友链</a>
-      <a href="/search" class="nav-link">搜索</a>
-      <a href="/admin" class="nav-link">管理</a>
+      <a href="/" class="nav-link">{{ t('nav_home') }}</a>
+      <a href="/archive" class="nav-link">{{ t('nav_archive') }}</a>
+      <a href="/timeline" class="nav-link">{{ t('nav_timeline') }}</a>
+      <a href="/links" class="nav-link">{{ t('nav_links') }}</a>
+      <a href="/search" class="nav-link">{{ t('nav_search') }}</a>
+      {% for p in pages %}
+      <a href="/page/{{ p.slug }}" class="nav-link">{{ p.title }}</a>
+      {% endfor %}
+      <a href="/admin" class="nav-link">{{ t('nav_admin') }}</a>
     </nav>
 
     <div class="d-flex align-items-center gap-2">
-      <button class="icon-btn" id="themeToggle" aria-label="切换主题" title="切换主题">
+      <a href="/feed.xml" class="icon-btn" title="RSS" aria-label="RSS">📡</a>
+      <a href="/lang/{{ 'zh' if lang == 'en' else 'en' }}" class="lang-btn" title="Switch language">
+        {{ '中' if lang == 'en' else 'EN' }}
+      </a>
+      <button class="icon-btn" id="themeToggle" aria-label="{{ t('switch_theme') }}" title="{{ t('switch_theme') }}">
         <span class="theme-icon-light">☀️</span>
         <span class="theme-icon-dark">🌙</span>
       </button>
-      <button class="navbar-toggler d-md-none" id="navToggle" aria-label="菜单">
+      <button class="navbar-toggler d-md-none" id="navToggle" aria-label="{{ t('nav_home') }}">
         <span class="toggler-bar"></span><span class="toggler-bar"></span><span class="toggler-bar"></span>
       </button>
     </div>
   </div>
   <!-- 移动端菜单 -->
   <div class="mobile-menu d-md-none" id="mobileMenu">
-    <a href="/">首页</a>
-    <a href="/archive">归档</a>
-    <a href="/timeline">时间轴</a>
-    <a href="/links">友链</a>
-    <a href="/search">搜索</a>
-    <a href="/admin">管理</a>
+    <a href="/">{{ t('nav_home') }}</a>
+    <a href="/archive">{{ t('nav_archive') }}</a>
+    <a href="/timeline">{{ t('nav_timeline') }}</a>
+    <a href="/links">{{ t('nav_links') }}</a>
+    <a href="/search">{{ t('nav_search') }}</a>
+    {% for p in pages %}
+    <a href="/page/{{ p.slug }}">{{ p.title }}</a>
+    {% endfor %}
+    <a href="/admin">{{ t('nav_admin') }}</a>
   </div>
 </header>

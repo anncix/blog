@@ -23,6 +23,8 @@ PUBLIC_KEYS = [
     "friend_links",
     "comment_enabled",
     "ga_code",
+    "site_url",
+    "lang",
     # 通知配置
     "bark_enabled",
     "bark_key",
@@ -73,6 +75,8 @@ def get_options_dict(db: Session, keys: list[str] | None = None) -> dict:
         "dark_mode": "system",
         "comment_enabled": "1",
         "friend_links": "[]",
+        "site_url": settings.SITE_URL,
+        "lang": "zh",
         # 通知
         "bark_enabled": "0",
         "bark_key": "",

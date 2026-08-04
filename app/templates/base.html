@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-bs-theme="light" data-theme="light" data-theme-mode="{{ options.dark_mode }}" data-accent="{{ options.theme_color }}">
+<html lang="{{ lang }}" data-bs-theme="light" data-theme="light" data-theme-mode="{{ options.dark_mode }}" data-accent="{{ options.theme_color }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{% block title %}{{ options.site_name }}{% endblock %}</title>
   <meta name="description" content="{{ options.site_desc }}">
   <meta name="keywords" content="{{ options.site_keywords }}">
+  <link rel="alternate" type="application/rss+xml" title="RSS" href="/feed.xml">
+  <link rel="alternate" type="application/atom+xml" title="Atom" href="/feed.atom">
   <link rel="stylesheet" href="/static/vendor/bootstrap/bootstrap.min.css">
   <link rel="stylesheet" href="/static/css/style.css">
   {% block head %}{% endblock %}

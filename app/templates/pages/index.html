@@ -10,7 +10,7 @@
 <div class="row g-4">
   {% for a in articles %}
   <div class="col-md-6">
-    {{ article_card(a, options, category_map) }}
+    {{ article_card(a, options, category_map, category_slug_map, t) }}
   </div>
   {% else %}
   <div class="col-12">

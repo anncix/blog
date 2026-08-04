@@ -8,7 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.core.config import settings
 from app.core.security import hash_password
 from app.models import User, create_all
-from app.models.base import SessionLocal
+from app.models.base import SessionLocal, engine
 from app.routers import admin, api, front
 
 
@@ -16,6 +16,10 @@ from app.routers import admin, api, front
 async def lifespan(app: FastAPI):
     create_all()
     _bootstrap_admin()
+    # 依序初始化：先建表，再建 FTS 索引，最后注册钩子
+    from app.utils.search import setup_fts
+
+    setup_fts(engine)
     from app.utils.notify import setup_notify_hooks
 
     setup_notify_hooks()

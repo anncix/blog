@@ -1,7 +1,7 @@
 """API 路由：前后端分离的 JSON 接口（JWT 认证）。"""
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
@@ -70,10 +70,15 @@ def api_article(slug: str, db: Session = Depends(get_db)):
 
 
 @router.post("/comments", response_model=dict)
-def api_comment(data: CommentIn, db: Session = Depends(get_db)):
+def api_comment(data: CommentIn, request: Request, db: Session = Depends(get_db)):
     article = db.get(Article, data.article_id)
     if not article:
         raise HTTPException(status_code=404, detail="文章不存在")
+    # 反垃圾：关键词 / 频率 / 长度
+    from app.utils.anti_spam import check as anti_spam_check
+
+    if anti_spam_check(request, "", data.content):
+        raise HTTPException(status_code=400, detail="评论未通过反垃圾检查")
     comment = Comment(
         article_id=data.article_id,
         parent_id=data.parent_id,

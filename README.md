@@ -2,9 +2,11 @@
 
 > 类 Handsome 风格的轻量博客 · FastAPI + SQLite + Jinja2 服务端渲染
 
-基于 FastAPI 构建的简洁优雅博客，采用服务端渲染（SSR）输出 HTML，静态资源本地托管，开箱即用。支持深色/浅色模式、多主题配色、毛玻璃顶栏、Pjax 无刷新、Markdown 文章、嵌套评论、归档、时间轴、友链与后台管理。
+基于 FastAPI 构建的简洁优雅博客，采用服务端渲染（SSR）输出 HTML，静态资源本地托管，开箱即用。支持深色/浅色模式、多主题配色、毛玻璃顶栏、Pjax 无刷新、Markdown 文章、嵌套评论、归档、时间轴、友链、独立页面、RSS/Atom 订阅、全文搜索与后台管理。
 
 ## 版本
+
+**v0.0.3** — 新增 RSS/Atom 订阅、独立页面、全文搜索、评论反垃圾、中英双语、GPLv3 开源协议。
 
 **v0.0.2** — 新增评论通知：Bark 推送 + 邮件通知 + 后台设置。
 
@@ -16,18 +18,24 @@
   - 首页文章卡片流（Bootstrap 栅格两列布局）
   - 文章详情：mistune 解析 Markdown + 嵌套评论区 + 图片懒加载
   - 分类 / 标签页、文章归档（按年-月分组）、时间轴、友链页
-  - 全文搜索（标题 / 内容）
+  - 独立页面（自定义页面，如关于/友链等非文章内容）
+  - 全文搜索（SQLite FTS5 全文索引，标题 / 正文 / 摘要）
+  - RSS 2.0（`/feed.xml`）与 Atom 1.0（`/feed.atom`）订阅
+  - 中英双语界面（cookie 记忆语言偏好，前台文案可切换）
+  - 评论反垃圾：蜜罐字段 + IP 频率限制 + 垃圾关键词过滤
   - 侧边栏：个人资料、最新文章、热门文章、分类、标签云
 - **后台管理（`/admin`）**
   - Session-Cookie 单用户登录（默认 `admin / admin123`）
   - 文章编辑：textarea 写 Markdown + 实时预览
+  - 独立页面管理（新建 / 编辑 / 删除）
   - 评论审核（通过 / 驳回 / 删除）
-  - 站点设置表单：主题色、默认模式、站点信息、通知配置等，存 `options` 表
+  - 站点设置表单：站点信息、主题、语言、评论开关、通知配置等，存 `options` 表
   - 通知设置：Bark 推送 + 邮件（SMTP）通知配置入口
   - 友链管理、分类管理
 - **技术亮点**
   - Jinja2 模板继承 + 组件拆分（components/）
-  - CSS 变量驱动多配色 + 深色 / 浅色模式切换
+  - CSS 变量驱动多配色 + 深色 / 浅色模式切换（跟随系统 / 手动）
+  - SQLite FTS5 全文搜索 + 触发器自动同步文章索引
   - 毛玻璃固定顶栏 + 双栏响应式布局
   - Pjax 无刷新加载、图片懒加载、返回顶部
   - 前后端分离演示：`/api` 提供 JSON 接口（JWT 认证）
@@ -48,22 +56,24 @@
 ```
 app/
 ├── core/            # 配置 / 安全(JWT·密码) / 依赖注入
-├── models/          # SQLAlchemy 6 张表模型
+├── models/          # SQLAlchemy 7 张表模型
 ├── schemas/         # Pydantic 校验
 ├── routers/         # 前台 / 后台 / API 路由分离
-├── utils/           # Markdown 解析 / 钩子预留
+├── utils/           # Markdown / 搜索 / RSS·Atom / 反垃圾 / i18n / 通知 / 钩子
 ├── templates/
 │   ├── base.html               # 基础骨架
 │   ├── components/             # header/nav/sidebar/footer/card/comments
-│   └── pages/                  # 首页·详情·分类·标签·归档·时间轴·友链·搜索·后台
+│   └── pages/                  # 首页·详情·分类·标签·归档·时间轴·友链·搜索·独立页面·后台
 └── static/          # 静态资源（CSS/JS/本地 Bootstrap）
 run.py               # 开发启动脚本
 requirements.txt
 ```
 
-## 数据模型（6 表）
+## 数据模型（7 表）
 
-`users` · `articles` · `categories` · `tags` · `comments`（自引用嵌套）· `options`（站点配置键值对，含友链 JSON）
+`users` · `articles` · `categories` · `tags` · `comments`（自引用嵌套）· `options`（站点配置键值对，含友链 JSON）· `pages`（独立页面）
+
+> 文章全文搜索基于 SQLite FTS5 虚拟表 `articles_fts`，由触发器在文章增删改时自动同步。
 
 ## 快速开始
 
@@ -116,6 +126,16 @@ uvicorn app.main:app --reload --port 8000
 
 ## 更新记录
 
+### v0.0.3（2026-08-04）
+- 新增 RSS 2.0（`/feed.xml`）与 Atom 1.0（`/feed.atom`）订阅，`app/utils/feed.py` 标准库生成 XML
+- 新增独立页面模型 `pages` 与前台 `/page/{slug}`、后台页面管理
+- 新增全文搜索：SQLite FTS5 虚拟表 + 触发器自动同步，失败回退 LIKE，`app/utils/search.py`
+- 评论加入反垃圾：蜜罐字段 + IP 频率限制 + 垃圾关键词过滤，`app/utils/anti_spam.py`
+- 新增中英双语支持：`app/utils/i18n.py` 翻译字典 + cookie 记忆语言偏好，前台文案可切换
+- 完善亮暗模式：跟随系统 / 手动切换，CSS 变量驱动
+- 开源协议改为 GPLv3（`LICENSE`）
+- 修复 404 渲染状态码、API 评论缺 `Request` 导入、FTS 初始化等逻辑问题
+
 ### v0.0.2（2026-08-04）
 - 新增评论通知模块 `app/utils/notify.py`：Bark 推送 + SMTP 邮件发送
 - 用户发表评论 → Bark 推送通知管理员（失败静默，不影响主流程）
@@ -134,4 +154,4 @@ uvicorn app.main:app --reload --port 8000
 
 ## License
 
-[MIT](LICENSE)
+[GNU GPL v3.0](LICENSE)

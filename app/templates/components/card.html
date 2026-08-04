@@ -1,8 +1,8 @@
-{% macro article_card(a, opts, cat_map) %}
+{% macro article_card(a, opts, cat_map, cat_slug_map, t) %}
 <article class="card glass-card article-card">
   <div class="card-body">
     {% if a.category_id and cat_map.get(a.category_id) %}
-    <a href="/category/{{ cat_map[a.category_id] }}" class="badge cat-badge">#{{ cat_map[a.category_id] }}</a>
+    <a href="/category/{{ cat_slug_map.get(a.category_id, cat_map[a.category_id]) }}" class="badge cat-badge">#{{ cat_map[a.category_id] }}</a>
     {% endif %}
     <h2 class="card-title article-title">
       <a href="/article/{{ a.slug }}">{{ a.title }}</a>
@@ -10,18 +10,18 @@
     <div class="article-meta">
       <span>👤 {{ opts.site_author }}</span>
       <span>📅 {{ a.published_at.strftime('%Y-%m-%d') if a.published_at }}</span>
-      <span>👁 {{ a.views }} 阅读</span>
+      <span>👁 {{ a.views }} {{ t('views') }}</span>
       {% if a.tags %}
       <span>🏷
-        {% for t in a.tags %}<a href="/tag/{{ t }}" class="meta-tag">{{ t }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
+        {% for tag in a.tags %}<a href="/tag/{{ tag }}" class="meta-tag">{{ tag }}</a>{% if not loop.last %}, {% endif %}{% endfor %}
       </span>
       {% endif %}
     </div>
     <p class="article-summary">{{ a.summary }}</p>
     {% if a.tags %}
     <div class="article-tags">
-      {% for t in a.tags %}
-      <a href="/tag/{{ t }}" class="chip chip-sm">{{ t }}</a>
+      {% for tag in a.tags %}
+      <a href="/tag/{{ tag }}" class="chip chip-sm">{{ tag }}</a>
       {% endfor %}
     </div>
     {% endif %}

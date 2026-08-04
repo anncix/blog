@@ -1,5 +1,5 @@
 """Pydantic 校验模型。"""
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import settings
 

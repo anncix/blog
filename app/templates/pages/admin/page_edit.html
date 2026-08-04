@@ -1,0 +1,52 @@
+{% extends "pages/admin/base.html" %}
+{% block title %}{{ '编辑页面' if page else '新建页面' }}{% endblock %}
+{% block admin_title %}{{ '编辑页面' if page else '新建页面' }}{% endblock %}
+{% block content %}
+<form action="/admin/pages/save" method="post" id="pageForm">
+  <input type="hidden" name="id" value="{{ page.id if page else '' }}">
+  <div class="card mb-3">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-8">
+          <label class="form-label">标题 *</label>
+          <input type="text" name="title" class="form-control" value="{{ page.title if page else '' }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">别名 (slug)</label>
+          <input type="text" name="slug" class="form-control" value="{{ page.slug if page else '' }}" placeholder="留空自动生成">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">状态</label>
+          <select name="status" class="form-select">
+            <option value="published" {{ 'selected' if not page or page.status == 'published' }}>发布</option>
+            <option value="draft" {{ 'selected' if page and page.status == 'draft' }}>草稿</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>正文（Markdown）</span>
+      <div class="btn-group btn-group-sm">
+        <button type="button" class="btn btn-outline-secondary" id="editModeBtn">编辑</button>
+        <button type="button" class="btn btn-outline-secondary" id="previewModeBtn">预览</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <textarea name="content" id="editor" class="form-control font-monospace" rows="18" placeholder="使用 Markdown 语法书写…">{{ page.content if page else '' }}</textarea>
+      <div id="preview" class="markdown-body d-none border rounded p-3"></div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end gap-2">
+    <a href="/admin/pages" class="btn btn-outline-secondary">取消</a>
+    <button type="submit" class="btn btn-primary">保存</button>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/markdown-preview.js"></script>
+{% endblock %}

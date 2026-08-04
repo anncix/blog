@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}{{ page.title }} - {{ options.site_name }}{% endblock %}
+
+{% block content %}
+<article class="card glass-card article-detail">
+  <div class="card-body">
+    <h1 class="article-detail-title">{{ page.title }}</h1>
+    <hr>
+    <div class="markdown-body">
+      {{ content_html | safe }}
+    </div>
+  </div>
+</article>
+{% endblock %}

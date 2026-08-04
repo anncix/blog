@@ -12,7 +12,7 @@ class Settings:
     """应用配置，集中管理常量，可通过环境变量覆盖。"""
 
     APP_NAME: str = "Anncix Blog"
-    VERSION: str = "0.0.2"
+    VERSION: str = "0.0.3"
     DEBUG: bool = os.getenv("DEBUG", "true").lower() in ("1", "true", "yes")
 
     # 数据库
@@ -36,6 +36,9 @@ class Settings:
 
     # 分页
     PAGE_SIZE: int = 6
+
+    # 站点基础 URL（用于 RSS/Atom 生成绝对链接，默认 http://localhost:8000）
+    SITE_URL: str = os.getenv("SITE_URL", "http://localhost:8000").rstrip("/")
 
 
 settings = Settings()

@@ -4,6 +4,7 @@ from app.models.base import Base, engine
 from app.models.category import Category
 from app.models.comment import Comment
 from app.models.option import Option
+from app.models.page import Page
 from app.models.tag import Tag
 from app.models.user import User
 
@@ -16,6 +17,7 @@ __all__ = [
     "Tag",
     "Comment",
     "Option",
+    "Page",
 ]
 
 

@@ -85,7 +85,11 @@ a:hover { color: var(--accent); opacity: 0.85; }
 .brand-name { letter-spacing: 0.5px; }
 .nav-link { color: var(--text-muted) !important; font-weight: 500; padding: 0.4rem 0.8rem; border-radius: 8px; transition: 0.2s; }
 .nav-link:hover { color: var(--accent) !important; background: var(--accent-soft); }
-.icon-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text); }
+.icon-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; color: var(--text); text-decoration: none; }
+.lang-btn { background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+.lang-btn:hover { border-color: var(--accent); }
+/* 蜜罐字段：移出可视区域，避免 display:none 被机器人识别 */
+.hp-field { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 [data-theme="dark"] .theme-icon-light { display: none; }
 [data-theme="light"] .theme-icon-dark { display: none; }
 .navbar-toggler { background: none; border: none; padding: 6px; }

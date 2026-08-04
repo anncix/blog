@@ -1,17 +1,18 @@
-"""前台路由：首页、文章详情、分类/标签、归档、时间轴、友链、搜索、评论提交。"""
-import json
-
+"""前台路由：首页、文章详情、分类/标签、归档、时间轴、友链、独立页面、搜索、评论、订阅。"""
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.deps import get_option, get_options_dict
-from app.models import Article, Category, Comment, Tag
+from app.models import Article, Category, Comment, Page, Tag
 from app.models.base import get_db
 from app.routers.helpers import render
+from app.utils.anti_spam import check as anti_spam_check
+from app.utils.feed import feed_response
+from app.utils.i18n import normalize_lang
 from app.utils.markdown import render_markdown
+from app.utils.search import search_articles
 
 router = APIRouter()
 
@@ -176,15 +177,7 @@ def links(request: Request, db: Session = Depends(get_db)):
 @router.get("/search")
 def search(request: Request, q: str = "", db: Session = Depends(get_db)):
     q = q.strip()
-    articles = []
-    if q:
-        like = f"%{q}%"
-        articles = (
-            db.query(Article)
-            .filter(_published(), or_(Article.title.like(like), Article.content.like(like)))
-            .order_by(Article.published_at.desc())
-            .all()
-        )
+    articles = search_articles(db, q) if q else []
     return render(
         request, "pages/search.html", db, {"articles": articles, "q": q}
     )
@@ -201,11 +194,20 @@ def submit_comment(
     author_email: str = Form(""),
     content: str = Form(...),
     parent_id: int | None = Form(None),
+    website: str = Form(""),  # 蜜罐字段
     db: Session = Depends(get_db),
 ):
     article = db.get(Article, article_id)
+    redirect = request.headers.get("Referer")
+    if not redirect or not redirect.startswith("/"):
+        redirect = f"/article/{article.slug}" if article else "/"
     if not article or article.status != "published":
-        return RedirectResponse("/", status_code=302)
+        return RedirectResponse(redirect, status_code=302)
+
+    # 反垃圾：蜜罐 / 长度 / 关键词 / 频率，命中即静默成功返回
+    if anti_spam_check(request, website, content):
+        return RedirectResponse(redirect, status_code=302)
+
     comment = Comment(
         article_id=article_id,
         parent_id=parent_id,
@@ -229,5 +231,58 @@ def submit_comment(
             "is_admin": bool(request.session.get("user_id")),
         },
     )
-    redirect = request.headers.get("Referer", f"/article/{article.slug}")
     return RedirectResponse(redirect, status_code=302)
+
+
+# ---------------------------------------------------------------------------
+# 独立页面（自定义页面）
+# ---------------------------------------------------------------------------
+@router.get("/page/{slug}")
+def page_view(slug: str, request: Request, db: Session = Depends(get_db)):
+    page = db.query(Page).filter(Page.slug == slug).first()
+    if not page or page.status != "published":
+        return render(request, "pages/404.html", db, {}, status_code=404)
+    return render(
+        request,
+        "pages/page.html",
+        db,
+        {"page": page, "content_html": render_markdown(page.content)},
+    )
+
+
+# ---------------------------------------------------------------------------
+# 语言切换
+# ---------------------------------------------------------------------------
+@router.get("/lang/{code}")
+def switch_lang(code: str, request: Request):
+    lang = normalize_lang(code)
+    response = RedirectResponse(request.headers.get("Referer", "/"), status_code=302)
+    response.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365, samesite="lax")
+    return response
+
+
+# ---------------------------------------------------------------------------
+# RSS / Atom 订阅
+# ---------------------------------------------------------------------------
+def _feed_articles(db: Session, limit: int = 20) -> list:
+    return (
+        db.query(Article)
+        .filter(_published())
+        .order_by(Article.published_at.desc())
+        .limit(limit)
+        .all()
+    )
+
+
+@router.get("/feed.xml")
+def rss_feed(db: Session = Depends(get_db)):
+    options = get_options_dict(db)
+    base_url = (options.get("site_url") or settings.SITE_URL).rstrip("/")
+    return feed_response("rss", base_url, options, _feed_articles(db))
+
+
+@router.get("/feed.atom")
+def atom_feed(db: Session = Depends(get_db)):
+    options = get_options_dict(db)
+    base_url = (options.get("site_url") or settings.SITE_URL).rstrip("/")
+    return feed_response("atom", base_url, options, _feed_articles(db))

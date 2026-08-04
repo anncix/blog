@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 {% from "components/card.html" import article_card %}
-{% block title %}搜索 - {{ options.site_name }}{% endblock %}
+{% block title %}{{ t('nav_search') }} - {{ options.site_name }}{% endblock %}
 
 {% block content %}
 <div class="page-head">
-  <h1 class="page-title">搜索</h1>
+  <h1 class="page-title">{{ t('nav_search') }}</h1>
 </div>
 <form class="card glass-card p-3 mb-4" action="/search" method="get">
   <div class="input-group">
-    <input type="text" name="q" class="form-control" placeholder="输入关键词搜索文章…" value="{{ q }}">
-    <button class="btn btn-primary" type="submit">搜索</button>
+    <input type="text" name="q" class="form-control" placeholder="{{ t('search_placeholder') }}" value="{{ q }}">
+    <button class="btn btn-primary" type="submit">{{ t('search') }}</button>
   </div>
 </form>
 
 {% if q %}
 <div class="row g-4">
   {% for a in articles %}
-  <div class="col-md-6">{{ article_card(a, options, category_map) }}</div>
+  <div class="col-md-6">{{ article_card(a, options, category_map, category_slug_map, t) }}</div>
   {% else %}
-  <div class="col-12"><div class="card glass-card text-center py-5"><p class="text-muted mb-0">没有找到与「{{ q }}」相关的文章</p></div></div>
+  <div class="col-12"><div class="card glass-card text-center py-5"><p class="text-muted mb-0">{{ t('search_no_result', q=q) }}</p></div></div>
   {% endfor %}
 </div>
 {% endif %}

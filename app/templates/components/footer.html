@@ -1,6 +1,10 @@
 <footer class="blog-footer">
   <div class="container text-center">
     <p class="mb-1">{{ options.footer_text or (options.site_name ~ ' © ' ~ options.site_author) }}</p>
-    <p class="small text-muted mb-0">Powered by FastAPI · Anncix Blog</p>
+    <p class="small text-muted mb-0">
+      {{ t('powered_by') }} ·
+      <a href="/feed.xml" class="text-muted">RSS</a> ·
+      <a href="/feed.atom" class="text-muted">Atom</a>
+    </p>
   </div>
 </footer>

@@ -1,4 +1,4 @@
-{% macro render_comment_tree(comment, tree, depth=0) %}
+{% macro render_comment_tree(comment, tree, t, depth=0) %}
 <div class="comment-item" style="--depth: {{ depth }}">
   <div class="comment-avatar">{{ comment.author_name[0] }}</div>
   <div class="comment-body">
@@ -7,11 +7,11 @@
       <span class="comment-date">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
     </div>
     <p class="comment-content">{{ comment.content }}</p>
-    <button class="reply-btn" data-comment-id="{{ comment.id }}" data-author="{{ comment.author_name }}">回复</button>
+    <button class="reply-btn" data-comment-id="{{ comment.id }}" data-author="{{ comment.author_name }}">{{ t('reply') }}</button>
     {% if tree.get(comment.id) %}
     <div class="comment-children">
       {% for child in tree[comment.id] %}
-      {{ render_comment_tree(child, tree, depth + 1) }}
+      {{ render_comment_tree(child, tree, t, depth + 1) }}
       {% endfor %}
     </div>
     {% endif %}
@@ -21,35 +21,39 @@
 
 <div class="card glass-card comments-card">
   <div class="card-header section-title">
-    评论 <span class="text-muted small">({{ comments|length }})</span>
+    {{ t('comments') }} <span class="text-muted small">({{ comments|length }})</span>
   </div>
   <div class="card-body">
     {% if not comment_enabled %}
-    <p class="text-muted">评论已关闭。</p>
+    <p class="text-muted">{{ t('comment_disabled') }}</p>
     {% else %}
     <form id="commentForm" class="comment-form mb-4" action="/comment" method="post">
       <input type="hidden" name="article_id" value="{{ article.id }}">
       <input type="hidden" name="parent_id" id="parentId" value="">
+      <!-- 蜜罐字段：人不可见，机器人填写即拦截 -->
+      <div class="hp-field" aria-hidden="true">
+        <input type="text" name="website" tabindex="-1" autocomplete="off" placeholder="Website">
+      </div>
       <div class="row g-2">
         <div class="col-md-6">
-          <input type="text" name="author_name" class="form-control" placeholder="昵称 *" required>
+          <input type="text" name="author_name" class="form-control" placeholder="{{ t('name') }}" required>
         </div>
         <div class="col-md-6">
-          <input type="email" name="author_email" class="form-control" placeholder="邮箱（可选）">
+          <input type="email" name="author_email" class="form-control" placeholder="{{ t('email') }}">
         </div>
       </div>
-      <textarea name="content" class="form-control mt-2" rows="3" placeholder="写下你的评论…" required></textarea>
+      <textarea name="content" class="form-control mt-2" rows="3" placeholder="{{ t('comment_placeholder') }}" required></textarea>
       <div class="d-flex justify-content-between align-items-center mt-2">
-        <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="cancelReply">取消回复</button>
-        <button type="submit" class="btn btn-primary btn-sm">提交评论</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary d-none" id="cancelReply">{{ t('cancel_reply') }}</button>
+        <button type="submit" class="btn btn-primary btn-sm">{{ t('submit_comment') }}</button>
       </div>
     </form>
 
     <div id="commentList">
       {% for comment in comment_tree.get(None, []) %}
-      {{ render_comment_tree(comment, comment_tree) }}
+      {{ render_comment_tree(comment, comment_tree, t) }}
       {% else %}
-      <p class="text-muted text-center">还没有评论，来抢沙发吧～</p>
+      <p class="text-muted text-center">{{ t('no_comments') }}</p>
       {% endfor %}
     </div>
     {% endif %}

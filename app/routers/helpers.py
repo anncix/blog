@@ -5,9 +5,18 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_options_dict
-from app.models import Article, Category, Comment, Tag
+from app.models import Article, Category, Page, Tag
+from app.utils.i18n import normalize_lang, t as _t
 
 templates = Jinja2Templates(directory="app/templates")
+
+
+def resolve_lang(request: Request, options: dict) -> str:
+    """语言优先级：cookie > 站点配置 > 默认 zh。"""
+    cookie = request.cookies.get("lang")
+    if cookie:
+        return normalize_lang(cookie)
+    return normalize_lang(options.get("lang"))
 
 
 def _sidebar_data(db: Session) -> dict:
@@ -46,11 +55,18 @@ def _sidebar_data(db: Session) -> dict:
         for t in tag_rows
         if tag_counts.get(t.name, 0) > 0
     ]
+    pages = (
+        db.query(Page)
+        .filter(Page.status == "published")
+        .order_by(Page.published_at.asc())
+        .all()
+    )
     return {
         "latest_articles": latest,
         "hot_articles": hot,
         "categories": categories,
         "tags": tags,
+        "pages": pages,
     }
 
 
@@ -59,16 +75,23 @@ def render(
     template: str,
     db: Session,
     context: dict | None = None,
+    status_code: int = 200,
 ) -> "Response":
     """渲染模板：注入 request、站点配置与侧边栏数据。"""
     cats = db.query(Category).all()
     category_map = {c.id: c.name for c in cats}
+    category_slug_map = {c.id: c.slug for c in cats}
+    options = get_options_dict(db)
+    lang = resolve_lang(request, options)
     ctx = {
         "request": request,
-        "options": get_options_dict(db),
+        "options": options,
+        "lang": lang,
+        "t": lambda key, **kw: _t(lang, key, **kw),
         "category_map": category_map,
+        "category_slug_map": category_slug_map,
         **_sidebar_data(db),
     }
     if context:
         ctx.update(context)
-    return templates.TemplateResponse(request, template, ctx)
+    return templates.TemplateResponse(request, template, ctx, status_code=status_code)
