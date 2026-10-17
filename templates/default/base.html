@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- 主题初始化：三态（auto 跟随系统 / light / dark），默认 auto；同步写 data-theme-mode 供 UI 判断 -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem('infowe-theme');
+          var mode = 'auto';
+          if (saved === 'light' || saved === 'dark' || saved === 'auto') mode = saved;
+          document.documentElement.setAttribute('data-theme-mode', mode);
+          var dark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          document.documentElement.setAttribute('data-theme', mode === 'auto' ? (dark ? 'dark' : 'light') : mode);
+        } catch (e) {}
+      })();
+    </script>
+    <title>{% block title %}{{ blog_name }}{% endblock %} - {{ blog_name }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='images/favicon.svg') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css', t='v' ~ version) }}">
+    {% if active_theme != 'default' and theme_has_css %}
+    <!-- 主题样式：在默认样式之后加载，可覆盖 CSS 变量或任意样式 -->
+    <link rel="stylesheet" href="{{ url_for('theme_static', filename=active_theme ~ '/theme.css', t='v' ~ version) }}">
+    {% endif %}
+    <link rel="alternate" type="application/rss+xml" title="{{ blog_name }} RSS" href="{{ url_for('rss_feed') }}">
+    <!-- 社交分享：Open Graph + Twitter Card -->
+    <meta property="og:site_name" content="{{ blog_name }}">
+    <meta property="og:title" content="{% block og_title %}{{ blog_name }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ blog_subtitle }}{% endblock %}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:url" content="{% block og_url %}{{ request.url }}{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/og-image.png') }}{% endblock %}">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block tw_title %}{{ blog_name }}{% endblock %}">
+    <meta name="twitter:description" content="{% block tw_description %}{{ blog_subtitle }}{% endblock %}">
+    <meta name="twitter:image" content="{% block tw_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/og-image.png') }}{% endblock %}">
+    {% if request.path.startswith('/post/') or request.path.startswith('/projects/') %}
+    <!-- 正文统一 GitHub 排版（文章正文 / 项目 README 共用），须在主题样式之后加载 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/markdown-body.css', t='v' ~ version) }}">
+    <!-- 评论区（两主题共用，靠 CSS 变量换肤）+ Toast 轻提示 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/comments.css', t='v' ~ version) }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/toast.css', t='v' ~ version) }}">
+    {% endif %}
+    {% if request.path.startswith('/post/') %}
+    <!-- 文章分享面板样式（两主题通用） -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/share.css', t='v' ~ version) }}">
+    {% endif %}
+</head>
+<body>
+    <!-- 跳过导航 -->
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+    <!-- 粒子背景 -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- 鼠标光晕 -->
+    <div class="cursor-glow" id="cursor-glow"></div>
+
+    <!-- 阅读进度条 -->
+    <div class="reading-progress" id="reading-progress"></div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-inner">
+            <a href="/" class="nav-logo">
+                <span class="logo-bracket">&lt;</span>
+                <span class="logo-text">{{ blog_name }}</span>
+                <span class="logo-bracket">/&gt;</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
+                    {{ icon('home', 18, 'nav-icon') | safe }} 首页
+                </a>
+                {# 可开关页面：由后台「导航菜单」控制，关闭后不渲染 #}
+                {% set nav_icons = {'posts': 'file-text', 'tags': 'tag', 'projects': 'star',
+                                    'links': 'link', 'about': 'at-sign', 'status': 'rocket'} %}
+                {% for item in nav_pages %}
+                <a href="{{ item.href }}" class="nav-link {% if request.path == item.href %}active{% endif %}">
+                    {{ icon(nav_icons[item.key], 18, 'nav-icon') | safe }} {{ item.label }}
+                </a>
+                {% endfor %}
+                <a href="/admin" class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}">
+                    {{ icon('pencil', 18, 'nav-icon') | safe }} 写作
+                </a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" id="theme-toggle" aria-label="切换主题">
+                    <span class="theme-icon-dark">{{ icon('sun', 20) | safe }}</span>
+                    <span class="theme-icon-light">{{ icon('moon', 20) | safe }}</span>
+                </button>
+                <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="菜单">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容 -->
+    <main class="main-content" id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="logo-bracket">&lt;</span>{{ blog_name }}<span class="logo-bracket">/&gt;</span>
+            </div>
+            <div class="footer-links">
+                {% set footer_links = [] %}
+                {% if nav_on.projects %}{% set _ = footer_links.append(('开源项目', '/projects')) %}{% endif %}
+                {% if nav_on.links %}{% set _ = footer_links.append(('友情链接', '/links')) %}{% endif %}
+                {% if nav_on.about %}{% set _ = footer_links.append(('关于我', '/about')) %}{% endif %}
+                {% set _ = footer_links.append(('RSS', '/feed.xml')) %}
+                {% for text, href in footer_links %}
+                {% if not loop.first %}<span class="footer-divider">·</span>{% endif %}
+                <a href="{{ href }}" class="footer-link">{{ text }}</a>
+                {% endfor %}
+            </div>
+            <p class="footer-copy">{% include '_footer_text.html' %}</p>
+            {% if icp_beian or police_beian %}
+            <div class="footer-beian">
+                {% if icp_beian %}
+                <a class="beian-link" href="https://beian.miit.gov.cn" target="_blank" rel="noopener">{{ icp_beian }}</a>
+                {% endif %}
+                {% if police_beian %}
+                <a class="beian-link" href="https://beian.mps.gov.cn" target="_blank" rel="noopener">{{ police_beian }}</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </footer>
+
+    <!-- 回到顶部 -->
+    <button class="back-to-top" id="back-to-top" aria-label="回到顶部">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+    </button>
+
+    {% if request.path.startswith('/post/') or request.path.startswith('/projects/') %}
+    <script src="{{ url_for('static', filename='vendor/highlight.js/highlight.min.js', t='v' ~ version) }}" defer></script>
+    {% endif %}
+    <script src="{{ url_for('static', filename='js/main.js', t='v' ~ version) }}" defer></script>
+    <script src="{{ url_for('static', filename='js/disable-zoom.js', t='v' ~ version) }}"></script>
+    <script>
+    // 项目页「反馈」按钮：点击平滑滚动到评论区并聚焦输入框
+    (function () {
+      if (window.__techProjFeedbackBound) return; window.__techProjFeedbackBound = true;
+      document.addEventListener('click', function (e) {
+        var btn = e.target && e.target.closest && e.target.closest('.proj-feedback, .tech-proj-feedback');
+        if (!btn) return;
+        var sel = btn.getAttribute('data-feedback-to') || '#comments';
+        var target = document.querySelector(sel);
+        if (!target) return;
+        e.preventDefault();
+        var y = target.getBoundingClientRect().top + (window.scrollY || window.pageYOffset || document.documentElement.scrollTop);
+        try { window.scrollTo({ top: y - 72, behavior: 'smooth' }); }
+        catch (err) { window.scrollTo(0, y - 72); }
+        var ta = target.querySelector('textarea');
+        if (ta) {
+          // 如果评论输入框在 <details> 里，先展开再聚焦（否则隐藏 textarea 无法 focus）
+          var box = ta.closest('details');
+          if (box) box.open = true;
+          try { ta.focus({ preventScroll: true }); } catch (e) { try { ta.focus(); } catch (e2) {} }
+        }
+      });
+    })();
+    </script>
+    {% block scripts %}{% endblock %}
+    {# 统计代码：后台「统计代码」原样注入，仅管理员可填 #}
+    {{ stats_code | safe }}
+</body>
+</html>

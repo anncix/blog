@@ -1,0 +1,51 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ── 运行时日志 / 临时文件（不要入库）──
+_server*.log
+_server_err.log
+*.log
+_ck.txt
+_nav_check.txt
+
+# ── 本地会话 / 缓存 ──
+*.session
+.flaskenv
+.env
+.codebuddy/
+_tmp_*.py
+# 升级检测运行时缓存（检测时自动刷新，勿入库）
+._gh_*.json
+# 一次性修补 / 分析脚本
+_patch_*.py
+
+# ── 数据库与运行时数据（含 blog.db / posts.json，勿入库）──
+*.db
+app.db
+data/
+
+# ── 用户上传附件（运行时生成，勿入库）──
+static/uploads/
+uploads/
+# ── 头像代理磁盘缓存（运行时生成，勿入库）──
+static/cache/
+
+# ── 打包 / 进程文件（勿入库）──
+blog.zip
+*.pid
+gunicorn.pid
+
+# ── 编辑器 / 系统 ──
+.DS_Store
+.idea/
+.vscode/
+
+# ── PHP 重构工具链（便携 PHP / MySQL 本地数据，勿入库）──
+.toolchain/
+
+# ── 重构前备份快照（本地留存，勿入库）──
+.backup/
